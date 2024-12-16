@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palabral</title>
+</head>
+<body>
+    <a href="../index.html" id="top">Home</a> |
+    <a href="resume.html">Resume</a> |
+    <a href="aboutme.html">About Me</a> |
+    <a href="#">Game</a> <br><br>
+
+    <h1>Palabral VR Game</h1>
+    
+    <div id="guess-container">
+        <!-- 6 rows for guesses -->
+    </div>
+    
+    <button id="submit-button">Submit Guess</button>
+    <button id="new-game-button">Start New Game</button>
+
+    <a-scene>
+        <a-entity id="game-board" position="-1.5 1.5 -4"></a-entity>
+    </a-scene>
+
+    <script>
+    const words = ["HELLO", "WORLD", "GUESS", "PLACE", "PLANT", "BRAVE", "STORM", "GLASS", "SHINE", "FLARE"];
+    let targetWord = words[Math.floor(Math.random() * words.length)].toUpperCase();
+    const maxAttempts = 6;
+    let attempts = 0;
+
+    function createBoard() {
+      const gameBoard = document.getElementById("game-board");
+      for (let i = 0; i < maxAttempts; i++) {
+        const row = document.createElement("a-entity");
+        row.setAttribute("class", "row");
+        row.setAttribute("position", `0 ${-i * 0.6} 0`);
+        
+        for (let j = 0; j < targetWord.length; j++) {
+          const cell = document.createElement("a-entity");
+          cell.setAttribute("class", "cell");
+          cell.setAttribute("geometry", "primitive: plane; height: 0.5; width: 0.5");
+          cell.setAttribute("material", "color: gray");
+          cell.setAttribute("position", `${j * 0.6} 0 0`);
+          cell.setAttribute("text", "value: ; color: black; align: center; width: 2");
+          row.appendChild(cell);
+        }
+        gameBoard.appendChild(row);
+      }
+    }
+
+    function createInputRows() {
+      const container = document.getElementById("guess-container");
+      container.innerHTML = ''; // Clear the container before adding new rows
+
+      for (let i = 0; i < maxAttempts; i++) {
+        const inputRow = document.createElement("div");
+        inputRow.setAttribute("class", "input-row");
+
+        for (let j = 0; j < targetWord.length; j++) {
+          const input = document.createElement("input");
+          input.setAttribute("type", "text");
+          input.setAttribute("maxlength", "1");
+          input.setAttribute("id", `guess-input-${i}-${j}`);
+          input.setAttribute("style", "width: 30px; text-align: center; margin: 2px;");
+          input.setAttribute("oninput", `moveFocus(${i}, ${j})`);
+          input.setAttribute("oninput", `this.value = this.value.toUpperCase();`); // Automatically capitalize letters
+          inputRow.appendChild(input);
+        }
+        container.appendChild(inputRow);
+      }
+    }
+
+    function moveFocus(row, col) {
+      const currentInput = document.getElementById(`guess-input-${row}-${col}`);
+      if (currentInput.value.length === 1) {
+        // Move focus to next input field, if available
+        for (let i = col + 1; i < targetWord.length; i++) {
+          const nextInput = document.getElementById(`guess-input-${row}-${i}`);
+          if (nextInput) {
+            nextInput.focus();
+            break;
+          }
+        }
+      }
+    }
+
+    function checkGuess() {
+      const input = [];
+      for (let i = 0; i < targetWord.length; i++) {
+        const inputField = document.getElementById(`guess-input-${attempts}-${i}`);
+        input.push(inputField.value.toUpperCase());
+      }
+
+      if (input.join('').length !== targetWord.length) {
+        alert("Word must be " + targetWord.length + " letters long.");
+        return;
+      }
+
+      const row = document.getElementsByClassName("row")[attempts];
+      const targetArray = targetWord.split('');
+      const guessArray = input;
+
+      let tempTargetArray = [...targetArray]; // Copy of the target word array to track used letters
+
+      // First pass: Check for correct letters in the correct position (blue)
+      for (let i = 0; i < targetWord.length; i++) {
+        const cell = row.children[i];
+        const inputLetter = input[i];
+        const inputField = document.getElementById(`guess-input-${attempts}-${i}`);
+        inputField.style.backgroundColor = ''; // Reset background color for each input before setting
+
+        if (inputLetter === targetWord[i]) {
+          // Correct letter, correct position (blue)
+          inputField.style.backgroundColor = 'blue';
+          cell.setAttribute("material", "color: blue");
+          tempTargetArray[i] = null; // Mark the letter as used for future checks
+        }
+      }
+
+      // Second pass: Check for correct letters in the wrong position (yellow)
+      for (let i = 0; i < targetWord.length; i++) {
+        const cell = row.children[i];
+        const inputLetter = input[i];
+        const inputField = document.getElementById(`guess-input-${attempts}-${i}`);
+
+        if (cell.getAttribute("material").color !== "blue" && tempTargetArray.includes(inputLetter)) {
+          // Correct letter, wrong position (yellow)
+          inputField.style.backgroundColor = 'yellow';
+          cell.setAttribute("material", "color: yellow");
+          tempTargetArray[tempTargetArray.indexOf(inputLetter)] = null; // Mark the letter as used
+        } else if (cell.getAttribute("material").color !== "blue") {
+          // Incorrect letter (gray)
+          inputField.style.backgroundColor = 'gray';
+          cell.setAttribute("material", "color: gray");
+        }
+      }
+
+      // Check if word is correct
+      attempts++;
+      if (input.join('') === targetWord) {
+        alert("Congratulations! You guessed the word.");
+        // Change all boxes to blue for a correct guess
+        for (let i = 0; i < targetWord.length; i++) {
+          const inputField = document.getElementById(`guess-input-${attempts - 1}-${i}`);
+          inputField.style.backgroundColor = 'blue'; // Set all input boxes to blue
+        }
+      } else if (attempts >= maxAttempts) {
+        alert("Game over! The word was " + targetWord + ".");
+      }
+    }
+
+    function startNewGame() {
+      // Reset game state
+      targetWord = words[Math.floor(Math.random() * words.length)].toUpperCase();
+      attempts = 0;
+
+      // Clear input fields and board
+      const container = document.getElementById("guess-container");
+      container.innerHTML = '';
+
+      const gameBoard = document.getElementById("game-board");
+      gameBoard.innerHTML = '';
+
+      // Recreate board and input rows
+      createBoard();
+      createInputRows();
+    }
+
+    window.onload = () => {
+      createBoard();
+      createInputRows();
+      document.getElementById("submit-button").addEventListener("click", checkGuess);
+      document.getElementById("new-game-button").addEventListener("click", startNewGame);
+    };
+    </script>
+</body>
+</html>

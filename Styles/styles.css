@@ -1,0 +1,49 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 15px;
+    color: #000000;  
+    background-color: rgb(241, 231, 231);
+} 
+li {
+    font-size: 14px;
+    font-style: italic;
+    font-weight: normal;
+}
+a {
+    color: rgb(9, 73, 102); 
+    text-decoration: none;   
+} 
+a:hover {
+    text-decoration: underline;
+    /* font-weight: bold;
+    font-size: 18px; */
+}
+a:visited {
+    color: rgb(88, 88, 236)
+}
+.resumelistheading {
+    font-weight: bold;
+    font-style: normal;
+}
+.underline {text-decoration: underline;}
+.bold {font-weight: bold;}
+.justify{text-align: justify;}
+
+.homebg {
+    background-image: url('../Images/FCB.jpg');
+    /* background-repeat: ; */
+} 
+
+
+.box1 {
+    border-width: 1px;
+    border-style: solid;
+}
+
+.box2 {
+    
+}
+
+.box3 {
+    
+}
